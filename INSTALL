@@ -3,15 +3,16 @@ INSTALLING
 
 To install, just run:
 
-  ./install.sh
+  make install
 
-as root. The script will be installed in your /usr/bin
-You can set DESTDIR to change the installation target:
+as root. The script will be installed in $(DESTDIR)/$(PREFIX)/bin/wv2ogg
+The default value for DESTDIR is / and for PREFIX it is /usr/local. You
+can specify either/both of them if you like:
 
-  DESTDIR=/path/to/target/dir ./install.sh
+  make install DESTDIR=/path/to/target/dir PREFIX=/usr/local
 
 UNINSTALLING
 ------------
 
-Just delete the file /usr/bin/wv2ogg
+Just delete the wv2ogg file from wherever it was installed.
 
