@@ -17,7 +17,7 @@ Usage examples:
 
 wv2ogg *.wv
 	will encode all wavpack files in the current directory to ogg
-	vorbis files transfering al tags and replaygain information. Ogg
+	vorbis files transfering all tags and replaygain information. Ogg
 	vorbis files will be encoded with -q 3 (the default setting)
 
 wv2ogg -q 5 a.wv /home/george/b.wv
