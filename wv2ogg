@@ -1,0 +1,157 @@
+#!/bin/sh
+#
+# wv2ogg - a script that encodes wavpack files to ogg vorbis, preserving
+# taggging and replaygain information
+#
+# Written by George Vlahavas 
+# (vlahavas~at~gmail~dot~com, gapan@zenwalk forums)
+#
+# Licensed under the GPL v3
+
+VERSION=0.1
+
+LANG=en_US	# To avoid problems with localization and commas as decimal points
+
+# Check for prerequisites, exit if not found
+REQUIRED="wvunpack oggenc vorbiscomment bc sed grep"
+for i in $REQUIRED; do
+	[[ -x `which $i 2> /dev/null` ]] || \
+	( echo "$i is needed but not found in PATH" && EXIT=1 )
+done
+[[ $EXIT -eq 1 ]] && exit 1
+
+QLEVEL=3	# Default vorbis quality level is 3
+NOTAGS=0	# Copy over tags by default
+NORGTAGS=0	# Inluding replaygain tags
+
+IFS="|"		# So that it works with spaces in filenames
+
+# help message
+help_msg()
+{
+cat << ENDHELP
+wv2ogg is a tool that converts wavpack files to ogg vorbis
+
+usage: wv2ogg [OPTIONS] <wavpack files>
+
+OPTIONS:
+    -q X,   Specify quality encoding level (X ranges from -1 to 10)
+    -r,     Don't transfer replaygain tags
+    -t,     Don't transfer any tags (implies -r)
+    -v,     Show version information
+    -h,     This help message
+	
+ENDHELP
+}
+
+# version message
+ver_msg()
+{
+cat << ENDVER
+wv2ogg version $VERSION (c) 2009 George Vlahavas
+Run 'wv2ogg -h' for help information
+ENDVER
+}
+
+# If no arguments are passed, show an error message
+if [ $# -eq 0 ]; then
+	help_msg
+	echo "ERROR: No arguments found."
+	exit 1
+fi
+
+# check which switches are used
+while getopts  ":htrvq:" flag
+do
+	# if switch is unknown or if asking for help
+	if [ $flag = "?" ] || [ $flag = "h" ]; then
+		help_msg
+		exit 1
+	fi
+	# if setting the quality switch
+	if [ $flag = "q" ]; then
+		# we check if it's a number
+		# (we remove the decimal point if it's there to do that)
+		if [ `echo $OPTARG | sed "s/\.//"` -eq `echo $OPTARG | sed "s/\.//"` 2> /dev/null ]; then 
+			# and if it's in range
+			# (bash is integer only, so we multiply all numbers *100
+			# oggenc uses only 2 decimals anyway)
+			NEWQ=`echo $OPTARG '*100' | bc -l | awk -F '.' '{ print $1; exit; }'`
+			if [ $NEWQ -ge -100 2> /dev/null ] &&  \
+			[ $NEWQ -le 1000 2> /dev/null ]; then
+			# and only then change the default value
+			QLEVEL=$OPTARG
+			# if it's out of range show help
+			else
+				help_msg
+				exit 1
+			fi
+		# if it's not a number show help
+		else
+			help_msg
+			exit 1
+		fi
+	fi
+	if [ $flag = "v" ]; then
+		ver_msg
+		exit 0
+	fi
+	if [ $flag = "t" ]; then
+		NOTAGS=1
+	fi
+	if [ $flag = "r" ]; then
+		NORGTAGS=1
+	fi
+done
+
+# we shift positions in $@ so that we discard all previous switches
+# and leave only files as additional arguments
+shift $((OPTIND-1))
+
+# test if all files are there
+for WAVPACKFILE in $@
+do
+	if [ ! -f $WAVPACKFILE ]; then
+		echo -e "ERROR: File $WAVPACKFILE not found.\n"
+		exit 1;
+	fi
+done
+
+# test if all files have the .wv extension (are wavpack files)
+for WAVPACKFILE in $@
+do
+	if [ ! `echo $WAVPACKFILE | grep "\.wv$"` ]; then
+		echo -e "ERROR: $WAVPACKFILE is not a wavpack file!\n"
+		exit 1;
+	fi
+done
+
+# do the actual conversion
+for WAVPACKFILE in $@
+do
+	FILENAME=`echo $WAVPACKFILE | sed "s/\.wv//"`
+	FILENAMENOPATHS=`echo $FILENAME | sed "s|\(.*\)/\(.*\)|\2|"`
+	if [ -f /tmp/wv2ogg.tmp.$$ ]; then
+		rm /tmp/wv2ogg.tmp.$$
+	fi
+	# encode file
+	wvunpack "$FILENAME.wv" -o - 2> /dev/null | \
+	oggenc -q $QLEVEL - -o "$FILENAMENOPATHS.ogg"
+	
+	# dump tags to a temp file
+	if [ $NOTAGS -eq 0 ]; then
+		if [ $NORGTAGS -eq 0 ]; then
+			wvunpack -ss -q "$FILENAME.wv" | sed '1,13d' | \
+			sed "s/^Year/Date/" |sed "s/^Track/TrackNumber/" | \
+			sed "s/ = /=/" > /tmp/wv2ogg.tmp.$$
+		else
+			wvunpack -ss -q "$FILENAME.wv" | sed '1,13d' | \
+			sed "s/^Year/Date/" |sed "s/^Track/TrackNumber/" | \
+			sed "s/ = /=/" | grep -v -i "^replaygain" > /tmp/wv2ogg.tmp.$$
+		fi
+		# read those tags from temp file and write to vorbis file
+		vorbiscomment -w "$FILENAMENOPATHS.ogg" -c /tmp/wv2ogg.tmp.$$
+		# remove temp file, not needed anymore
+		rm /tmp/wv2ogg.tmp.$$
+	fi
+done

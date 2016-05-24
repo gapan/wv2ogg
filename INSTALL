@@ -1,0 +1,17 @@
+INSTALLING
+----------
+
+To install, just run:
+
+  ./install.sh
+
+as root. The script will be installed in your /usr/bin
+You can set DESTDIR to change the installation target:
+
+  DESTDIR=/path/to/target/dir ./install.sh
+
+UNINSTALLING
+------------
+
+Just delete the file /usr/bin/wv2ogg
+

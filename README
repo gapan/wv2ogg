@@ -1,0 +1,33 @@
+wv2ogg
+------
+
+wv2ogg is a tool that uses wvunpack, oggenc and vorbiscomment to encode
+wavpack files to ogg vorbis files. The quality setting which will be
+used for encoding the vorbis files can be set when running wv2ogg. It will
+also transfer all tags and replaygain information from the wavpack files
+to the ogg vorbis files by default. wv2ogg was written because no other
+software that would do that existed in Linux.
+
+The default quality setting for vorbis files is -q 3. The resulting ogg
+vorbis files are always placed in the current directory.
+
+Run 'wv2ogg -h' to see all command line options.
+
+Usage examples:
+
+wv2ogg *.wv
+	will encode all wavpack files in the current directory to ogg
+	vorbis files transfering al tags and replaygain information. Ogg
+	vorbis files will be encoded with -q 3 (the default setting)
+
+wv2ogg -q 5 a.wv /home/george/b.wv
+	will encode file a.wv in the current directory and file b.wv in
+	/home/george to a.ogg and b.ogg which will be placed in the
+	current directory. The two .ogg files will be encoded with -q 5
+
+wv2ogg -q 4.5 -r /home/george/a.wv
+	will encode file /home/george/a.wv into an a.ogg file in the
+	current directory with -q 4.5 (you can use up to 2 decimal
+	points), will tranfer all tags, but it will not transfer any
+	replaygain information
+
