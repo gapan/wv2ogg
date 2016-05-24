@@ -1,7 +1,7 @@
 wv2ogg
 ------
 
-wv2ogg is a tool that uses wvunpack, oggenc and vorbiscomment to encode
+wv2ogg is a script that uses wvunpack, oggenc and vorbiscomment to encode
 wavpack files to ogg vorbis files. The quality setting which will be
 used for encoding the vorbis files can be set when running wv2ogg. It will
 also transfer all tags and replaygain information from the wavpack files
