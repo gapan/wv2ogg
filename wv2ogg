@@ -143,11 +143,11 @@ do
 		if [ $NORGTAGS -eq 0 ]; then
 			wvunpack -ss -q "$FILENAME.wv" | sed '1,13d' | \
 			sed "s/^Year/Date/" |sed "s/^Track/TrackNumber/" | \
-			sed "s/ = /=/" > /tmp/wv2ogg.tmp.$$
+			sed "s/: */=/" > /tmp/wv2ogg.tmp.$$
 		else
 			wvunpack -ss -q "$FILENAME.wv" | sed '1,13d' | \
 			sed "s/^Year/Date/" |sed "s/^Track/TrackNumber/" | \
-			sed "s/ = /=/" | grep -v -i "^replaygain" > /tmp/wv2ogg.tmp.$$
+			sed "s/: */=/" | grep -v -i "^replaygain" > /tmp/wv2ogg.tmp.$$
 		fi
 		# read those tags from temp file and write to vorbis file
 		vorbiscomment -w "$FILENAMENOPATHS.ogg" -c /tmp/wv2ogg.tmp.$$
